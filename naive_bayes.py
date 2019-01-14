@@ -6,18 +6,19 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
 def main():
     label_column = 'label'
     raw_data = pd.read_csv('./data/spam.csv', encoding='latin-1')
 
-    processed_data = raw_data[['v1', 'v2']].iloc[:1500]
+    processed_data = raw_data[['v1', 'v2']]
     processed_data = processed_data.rename(columns={'v1': label_column, 'v2': 'text'})
     processed_data[label_column] = processed_data.label.map({'ham': 0, 'spam': 1})
     processed_data['text'] = processed_data['text'].apply(process_text)
 
     vocabulary = get_vocabulary(processed_data['text'].str.cat(sep=' '))
     processed_data['feature_list'] = processed_data['text'].apply(lambda s: [vocabulary[word] for word in s.split()])
+    processed_data['empty'] = processed_data['feature_list'].apply(lambda fs: not fs)
+    processed_data = processed_data[processed_data['empty'] == False]
 
     ham, spam = processed_data[processed_data[label_column] == 0]['feature_list'], processed_data[processed_data[label_column] == 1]['feature_list']
     ham_probs, spam_probs = get_probabilities(ham, spam, vocabulary)
